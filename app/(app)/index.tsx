@@ -1,5 +1,6 @@
 import React from 'react';
 import { Text, View } from 'react-native';
+import { Button } from 'react-native-paper';
 import { useSession } from '../../ctx';
 
 export default function Index() {
@@ -9,12 +10,13 @@ export default function Index() {
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
       <Text>session id: {sessionId}</Text>
-      <Text
+      <Button
+        mode='contained-tonal'
         onPress={() => {
           signOut();
         }}>
         Sign Out
-      </Text>
+      </Button>
     </View>
   );
 }

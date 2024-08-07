@@ -39,9 +39,10 @@ export function SessionProvider({ children }: PropsWithChildren) {
         username,
         password,
       });
-      console.log(response.data["token"])
-      const { sessionId } = response.data["token"];
+      
+      const sessionId= response.data.token;
       setSession(sessionId);
+      console.log(getSessionId());
     } catch (error) {
       console.error('Failed to sign in', error);
       throw error; // Rethrow the error to handle it in the component
