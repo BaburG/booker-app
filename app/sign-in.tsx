@@ -31,7 +31,7 @@ export default function SignIn() {
         autoCapitalize="none"
         value={username}
         onChangeText={setUsername}
-        style={{ width: 200, marginBottom: 10 }}
+        style={{ width: 200, marginBottom: 10 } }
       />
       <TextInput
         placeholder="Password"
