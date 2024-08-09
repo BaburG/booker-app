@@ -1,15 +1,27 @@
-import React from 'react';
-import { Booking } from '@/types';
-import { Card, Text, VStack,Heading,  } from '@gluestack-ui/themed';
-
+import React from "react";
+import { Booking } from "@/types";
+import { Card, Text, VStack, Heading } from "@gluestack-ui/themed";
 
 interface CardProps {
-    item: Booking;
+  item: Booking;
 }
 
-const BookingCard: React.FC<CardProps> = ({item}) => {
-    return (
-        <Card p="$5" borderRadius="$lg" maxWidth={360} m="$3">
+const formatDate = (dateString: string) => {
+  const date = new Date(Date.parse(dateString));
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+  const year = date.getFullYear();
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+
+  return `${day}-${month}-${year}, ${hours}:${minutes}`;
+};
+
+const BookingCard: React.FC<CardProps> = ({ item }) => {
+  const startDate = formatDate(item.start);
+  const endDate = formatDate(item.end);
+  return (
+    <Card p="$5" borderRadius="$lg" width={335} m="$3">
       <Text
         fontSize="$sm"
         fontStyle="normal"
@@ -26,18 +38,22 @@ const BookingCard: React.FC<CardProps> = ({item}) => {
       >
         {item.username}
       </Text>
-      <VStack mb="$6">
-        <Heading size="md" fontFamily="$heading" mb="$4">
+      <VStack mb="$2">
+        <Heading size="md" fontFamily="$heading" mb="$2">
           {item.name}
         </Heading>
-        <Text size="sm" fontFamily="$heading">
+        <Text size="md" fontFamily="$heading">
           {item.description}
-          {item.start}
-          {item.end}
+        </Text>
+        <Text size="sm" fontFamily="$heading">
+          Start: {startDate}
+        </Text>
+        <Text size="sm" fontFamily="$heading">
+          End: {endDate}
         </Text>
       </VStack>
     </Card>
-    )
-}
+  );
+};
 
 export default BookingCard;

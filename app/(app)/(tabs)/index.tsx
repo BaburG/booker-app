@@ -1,15 +1,25 @@
-import React, { useEffect, useState } from 'react';
-import { Text, View, StyleSheet } from 'react-native';
-import { ScrollView, Accordion, AccordionContent, AccordionContentText, AccordionHeader, AccordionIcon, AccordionTrigger, AccordionItem, AccordionTitleText } from '@gluestack-ui/themed';
+import React, { useEffect, useState } from "react";
+import { Text, View, StyleSheet } from "react-native";
+import {
+  ScrollView,
+  Accordion,
+  AccordionContent,
+  AccordionContentText,
+  AccordionHeader,
+  AccordionIcon,
+  AccordionTrigger,
+  AccordionItem,
+  AccordionTitleText,
+} from "@gluestack-ui/themed";
 import { ChevronDownIcon, ChevronUpIcon } from "lucide-react-native";
-import  BookingCard  from "@/components/BookingCard";
+import BookingCard from "@/components/BookingCard";
 import Booking from "@/types";
-import { useSession } from '@/ctx';
+import { useSession } from "@/ctx";
 // import { ScrollView } from 'react-native-gesture-handler';
 
 // Function to format the date as "Month Day, Year"
 const formatDate = (date) => {
-  const options = { year: 'numeric', month: 'long', day: 'numeric' };
+  const options = { year: "numeric", month: "long", day: "numeric" };
   return date.toLocaleDateString(undefined, options);
 };
 
@@ -23,70 +33,93 @@ tomorrow.setDate(tomorrow.getDate() + 1);
 const afterTomorrow = new Date(tomorrow);
 afterTomorrow.setDate(afterTomorrow.getDate() + 1);
 
-const bookingss: Booking[] = [
-  {
-    id: 1,
-    name: 'Project Kickoff',
-    description: 'Initial meeting to discuss project requirements and timelines.',
-    start: '2024-08-10T10:00:00Z',
-    end: '2024-08-10T11:00:00Z',
-    creator: 'Jane Smith',
-  },
-  {
-    id: 2,
-    name: 'Design Review',
-    description: 'Review the design specifications and make adjustments.',
-    start: '2024-08-11T14:00:00Z',
-    end: '2024-08-11T15:00:00Z',
-    creator: 'John Doe',
-  },
-  {
-    id: 3,
-    name: 'Sprint Planning',
-    description: 'Plan the tasks for the upcoming sprint.',
-    start: '2024-08-12T09:00:00Z',
-    end: '2024-08-12T10:30:00Z',
-    creator: 'Alice Johnson',
-  },
-];
 
 
-
-export default function Settings() {
-  const [bookings, setBookings] = useState<Booking[]>([]);
+export default function Index() {
+  const [todayBookings, setTodayBookings] = useState<Booking[]>([]);
+  const [tomorrowBookings, setTomorrowBookings] = useState<Booking[]>([]);
+  const [afterTomorrowBookings, setAfterTomorrowBookings] = useState<Booking[]>(
+    []
+  );
 
   const { getSessionId } = useSession();
-  const token = getSessionId(); 
+  const token = getSessionId();
+
+  const todayFormattedDate = today.toISOString().split("T")[0];
+  const tomorrowFormattedDate = tomorrow.toISOString().split("T")[0];
+  const afterTomorrowFormattedDate = afterTomorrow.toISOString().split("T")[0];
+
 
   useEffect(() => {
-    fetch('http://192.168.1.106:8000/api/get_bookings', {
-      method: 'GET',
-      headers: {
-        'Authorization': `token ${token}`,
-      },
-    })
+    
+    fetch(
+      `http://192.168.1.106:8000/api/get_bookings?date=${todayFormattedDate}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `token ${token}`,
+        },
+      }
+    )
       .then((response) => response.json())
-      .then((data) => setBookings(data))
-      .catch((error) => console.error('Error fetching bookings:', error));
+      .then((data) => setTodayBookings(data))
+      .catch((error) => console.error("Error fetching bookings:", error));
+  
+
+    fetch(
+      `http://192.168.1.106:8000/api/get_bookings?date=${tomorrowFormattedDate}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `token ${token}`,
+        },
+      }
+    )
+      .then((response) => response.json())
+      .then((data) => setTomorrowBookings(data))
+      .catch((error) => console.error("Error fetching bookings:", error));
+
+    fetch(
+      `http://192.168.1.106:8000/api/get_bookings?date=${afterTomorrowFormattedDate}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `token ${token}`,
+        },
+      }
+    )
+      .then((response) => response.json())
+      .then((data) => setAfterTomorrowBookings(data))
+      .catch((error) => console.error("Error fetching bookings:", error));
   }, []);
 
 
   return (
-    <ScrollView >
-      <Accordion m="$5" width="90%" size="md" variant="filled" type="single" isCollapsible={false} isDisabled={false} defaultValue="a">
+    <ScrollView>
+      <Accordion
+        m="$5"
+        width="90%"
+        size="md"
+        variant="unfilled"
+        type="single"
+        isCollapsible={false}
+        isDisabled={false}
+        borderBottomWidth={1}
+        borderColor="$borderLight300"
+        $dark-borderColor="$borderDark700"
+        defaultValue="a"
+      >
         <AccordionItem value="a">
           <AccordionHeader>
             <AccordionTrigger>
               {({ isExpanded }) => {
                 return (
                   <>
-                    <AccordionTitleText>
-                      {formatDate(today)}
-                    </AccordionTitleText>
+                    <AccordionTitleText>{formatDate(today)}</AccordionTitleText>
                     {isExpanded ? (
-                      <AccordionIcon as={ChevronUpIcon} ml="$3"/>
+                      <AccordionIcon as={ChevronUpIcon} ml="$3" />
                     ) : (
-                      <AccordionIcon as={ChevronDownIcon} ml="$3"/>
+                      <AccordionIcon as={ChevronDownIcon} ml="$3" />
                     )}
                   </>
                 );
@@ -95,11 +128,14 @@ export default function Settings() {
           </AccordionHeader>
           <AccordionContent>
             <AccordionContentText>
-              {bookings.map((item) => ( <BookingCard item={item} />))}
+              {todayBookings.length === 0 && <Text>No Bookings</Text>}
+              {todayBookings.map((item) => (
+                <BookingCard item={item} key={item.id}/>
+              ))}
             </AccordionContentText>
           </AccordionContent>
         </AccordionItem>
-         <AccordionItem value="b">
+        <AccordionItem value="b">
           <AccordionHeader>
             <AccordionTrigger>
               {({ isExpanded }) => {
@@ -109,9 +145,9 @@ export default function Settings() {
                       {formatDate(tomorrow)}
                     </AccordionTitleText>
                     {isExpanded ? (
-                      <AccordionIcon as={ChevronUpIcon} ml="$3"/>
+                      <AccordionIcon as={ChevronUpIcon} ml="$3" />
                     ) : (
-                      <AccordionIcon as={ChevronDownIcon} ml="$3"/>
+                      <AccordionIcon as={ChevronDownIcon} ml="$3" />
                     )}
                   </>
                 );
@@ -120,7 +156,10 @@ export default function Settings() {
           </AccordionHeader>
           <AccordionContent>
             <AccordionContentText>
-              {bookingss.map((item) => ( <BookingCard item={item} />))}
+            {tomorrowBookings.length === 0 && <Text>No Bookings</Text>}
+              {tomorrowBookings.map((item) => (
+                <BookingCard item={item} key={item.id}/>
+              ))}
             </AccordionContentText>
           </AccordionContent>
         </AccordionItem>
@@ -134,9 +173,9 @@ export default function Settings() {
                       {formatDate(afterTomorrow)}
                     </AccordionTitleText>
                     {isExpanded ? (
-                      <AccordionIcon as={ChevronUpIcon} ml="$3"/>
+                      <AccordionIcon as={ChevronUpIcon} ml="$3" />
                     ) : (
-                      <AccordionIcon as={ChevronDownIcon} ml="$3"/>
+                      <AccordionIcon as={ChevronDownIcon} ml="$3" />
                     )}
                   </>
                 );
@@ -145,12 +184,14 @@ export default function Settings() {
           </AccordionHeader>
           <AccordionContent>
             <AccordionContentText>
-            {bookingss.map((item) => ( <BookingCard item={item} />))}
+            {afterTomorrowBookings.length === 0 && <Text>No Bookings</Text>}
+              {afterTomorrowBookings.map((item) => (
+                <BookingCard item={item} key={item.id}/>
+              ))}
             </AccordionContentText>
           </AccordionContent>
         </AccordionItem>
-        </Accordion>
-      
+      </Accordion>
     </ScrollView>
   );
 }
@@ -158,12 +199,12 @@ export default function Settings() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
   },
   text: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });
