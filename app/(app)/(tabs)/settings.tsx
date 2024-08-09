@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { Text, View } from 'react-native';
 import { Button } from 'react-native-paper';
-import { useSession } from '../../ctx';
+import { useSession } from '@/ctx';
 
 export default function Index() {
   const { signOut, getSessionId } = useSession();
