@@ -24,7 +24,7 @@ const BookingCard: React.FC<CardProps> = ({item}) => {
           },
         }}
       >
-        {item.creator}
+        {item.username}
       </Text>
       <VStack mb="$6">
         <Heading size="md" fontFamily="$heading" mb="$4">

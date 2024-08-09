@@ -4,5 +4,5 @@ export interface Booking {
     description: string;
     start: string;
     end: string;
-    creator: string; // Use string if it's a date-time string
+    username: string; // Use string if it's a date-time string
   }
