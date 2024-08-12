@@ -22,9 +22,11 @@ const formatDate = (date) => {
 
 
 
-export default function BookingAccordionItem( {date, BookingList}) {
+export default function BookingAccordionItem( {date, BookingList, value}) {
     return (
-        <AccordionItem value="a">
+        <AccordionItem value={value} 
+        borderBottomWidth={1}
+        borderColor="$borderLight300">
           <AccordionHeader>
             <AccordionTrigger>
               {({ isExpanded }) => {

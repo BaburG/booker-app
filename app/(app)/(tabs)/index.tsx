@@ -13,6 +13,7 @@ import {
 } from "@gluestack-ui/themed";
 import { ChevronDownIcon, ChevronUpIcon } from "lucide-react-native";
 import BookingCard from "@/components/BookingCard";
+import BookingAccordionItem from "@/components/BookingAccordionItem";
 import Booking from "@/types";
 import { useSession } from "@/ctx";
 // import { ScrollView } from 'react-native-gesture-handler';
@@ -36,7 +37,7 @@ afterTomorrow.setDate(afterTomorrow.getDate() + 1);
 
 
 export default function Index() {
-  const [todayBookings, setTodayBookings] = useState<Booking[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [tomorrowBookings, setTomorrowBookings] = useState<Booking[]>([]);
   const [afterTomorrowBookings, setAfterTomorrowBookings] = useState<Booking[]>(
     []
@@ -53,7 +54,7 @@ export default function Index() {
   useEffect(() => {
     
     fetch(
-      `http://192.168.1.106:8000/api/get_bookings?date=${todayFormattedDate}`,
+      `http://192.168.1.70:8000/api/get_week_bookings?date=${todayFormattedDate}`,
       {
         method: "GET",
         headers: {
@@ -62,34 +63,7 @@ export default function Index() {
       }
     )
       .then((response) => response.json())
-      .then((data) => setTodayBookings(data))
-      .catch((error) => console.error("Error fetching bookings:", error));
-  
-
-    fetch(
-      `http://192.168.1.106:8000/api/get_bookings?date=${tomorrowFormattedDate}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `token ${token}`,
-        },
-      }
-    )
-      .then((response) => response.json())
-      .then((data) => setTomorrowBookings(data))
-      .catch((error) => console.error("Error fetching bookings:", error));
-
-    fetch(
-      `http://192.168.1.106:8000/api/get_bookings?date=${afterTomorrowFormattedDate}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `token ${token}`,
-        },
-      }
-    )
-      .then((response) => response.json())
-      .then((data) => setAfterTomorrowBookings(data))
+      .then((data) => setBookings(data))
       .catch((error) => console.error("Error fetching bookings:", error));
   }, []);
 
@@ -102,95 +76,17 @@ export default function Index() {
         size="md"
         variant="unfilled"
         type="single"
-        isCollapsible={false}
+        isCollapsible={true}
         isDisabled={false}
-        borderBottomWidth={1}
-        borderColor="$borderLight300"
-        $dark-borderColor="$borderDark700"
-        defaultValue="a"
+        defaultValue={[Object.keys(bookings)[0]]}
       >
-        <AccordionItem value="a">
-          <AccordionHeader>
-            <AccordionTrigger>
-              {({ isExpanded }) => {
-                return (
-                  <>
-                    <AccordionTitleText>{formatDate(today)}</AccordionTitleText>
-                    {isExpanded ? (
-                      <AccordionIcon as={ChevronUpIcon} ml="$3" />
-                    ) : (
-                      <AccordionIcon as={ChevronDownIcon} ml="$3" />
-                    )}
-                  </>
-                );
-              }}
-            </AccordionTrigger>
-          </AccordionHeader>
-          <AccordionContent>
-            <AccordionContentText>
-              {todayBookings.length === 0 && <Text>No Bookings</Text>}
-              {todayBookings.map((item) => (
-                <BookingCard item={item} key={item.id}/>
-              ))}
-            </AccordionContentText>
-          </AccordionContent>
-        </AccordionItem>
-        <AccordionItem value="b">
-          <AccordionHeader>
-            <AccordionTrigger>
-              {({ isExpanded }) => {
-                return (
-                  <>
-                    <AccordionTitleText>
-                      {formatDate(tomorrow)}
-                    </AccordionTitleText>
-                    {isExpanded ? (
-                      <AccordionIcon as={ChevronUpIcon} ml="$3" />
-                    ) : (
-                      <AccordionIcon as={ChevronDownIcon} ml="$3" />
-                    )}
-                  </>
-                );
-              }}
-            </AccordionTrigger>
-          </AccordionHeader>
-          <AccordionContent>
-            <AccordionContentText>
-            {tomorrowBookings.length === 0 && <Text>No Bookings</Text>}
-              {tomorrowBookings.map((item) => (
-                <BookingCard item={item} key={item.id}/>
-              ))}
-            </AccordionContentText>
-          </AccordionContent>
-        </AccordionItem>
-        <AccordionItem value="c">
-          <AccordionHeader>
-            <AccordionTrigger>
-              {({ isExpanded }) => {
-                return (
-                  <>
-                    <AccordionTitleText>
-                      {formatDate(afterTomorrow)}
-                    </AccordionTitleText>
-                    {isExpanded ? (
-                      <AccordionIcon as={ChevronUpIcon} ml="$3" />
-                    ) : (
-                      <AccordionIcon as={ChevronDownIcon} ml="$3" />
-                    )}
-                  </>
-                );
-              }}
-            </AccordionTrigger>
-          </AccordionHeader>
-          <AccordionContent>
-            <AccordionContentText>
-            {afterTomorrowBookings.length === 0 && <Text>No Bookings</Text>}
-              {afterTomorrowBookings.map((item) => (
-                <BookingCard item={item} key={item.id}/>
-              ))}
-            </AccordionContentText>
-          </AccordionContent>
-        </AccordionItem>
+        {Object.entries(bookings).map(([date, BookingList], idx) => (
+        <BookingAccordionItem
+          value={idx + 1}
+          key={date}
+          date={new Date(date)} // Convert date string to Date object
+          BookingList={BookingList}
+        />))}
       </Accordion>
     </ScrollView>
   );
