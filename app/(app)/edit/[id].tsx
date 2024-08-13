@@ -83,7 +83,10 @@ export default function EditBookingScreen() {
     };
 
     axios
-      .put(`http://192.168.1.40:8000/api/get_booking?${id}`, updatedBookingData, {
+      .put(`http://192.168.1.40:8000/api/update_booking`, updatedBookingData, {
+        params: {
+          id : id
+        },
         headers: {
           Authorization: `token ${token}`,
           'Content-Type': 'application/json',
