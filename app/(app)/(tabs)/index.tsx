@@ -1,22 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Text, View, StyleSheet } from "react-native";
-import {
-  ScrollView,
-  Accordion,
-  AccordionContent,
-  AccordionContentText,
-  AccordionHeader,
-  AccordionIcon,
-  AccordionTrigger,
-  AccordionItem,
-  AccordionTitleText,
-} from "@gluestack-ui/themed";
-import { ChevronDownIcon, ChevronUpIcon } from "lucide-react-native";
-import BookingCard from "@/components/BookingCard";
+import { ScrollView, Accordion, SectionList, View, Text, Box, Center, Heading, Divider } from "@gluestack-ui/themed";
 import BookingAccordionItem from "@/components/BookingAccordionItem";
 import Booking from "@/types";
 import { useSession } from "@/ctx";
-// import { ScrollView } from 'react-native-gesture-handler';
+import BookingCard from "@/components/BookingCard";
 
 // Function to format the date as "Month Day, Year"
 const formatDate = (date) => {
@@ -34,27 +21,18 @@ tomorrow.setDate(tomorrow.getDate() + 1);
 const afterTomorrow = new Date(tomorrow);
 afterTomorrow.setDate(afterTomorrow.getDate() + 1);
 
-
-
 export default function Index() {
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [tomorrowBookings, setTomorrowBookings] = useState<Booking[]>([]);
-  const [afterTomorrowBookings, setAfterTomorrowBookings] = useState<Booking[]>(
-    []
-  );
+  const [sections, setSections] = useState([]);
 
   const { getSessionId } = useSession();
   const token = getSessionId();
 
   const todayFormattedDate = today.toISOString().split("T")[0];
-  const tomorrowFormattedDate = tomorrow.toISOString().split("T")[0];
-  const afterTomorrowFormattedDate = afterTomorrow.toISOString().split("T")[0];
-
 
   useEffect(() => {
-    
     fetch(
-      `http://192.168.1.70:8000/api/get_week_bookings?date=${todayFormattedDate}`,
+      `http://192.168.1.40:8000/api/get_week_bookings?date=${todayFormattedDate}`,
       {
         method: "GET",
         headers: {
@@ -63,44 +41,41 @@ export default function Index() {
       }
     )
       .then((response) => response.json())
-      .then((data) => setBookings(data))
+      .then((data) => {
+        setBookings(data);
+        
+        // Transform the data into the required format for SectionList
+        const transformedSections = Object.keys(data).map(date => ({
+          title: date,
+          data: data[date],
+        }));
+
+        setSections(transformedSections);
+      })
       .catch((error) => console.error("Error fetching bookings:", error));
+
+
+      
   }, []);
 
-
   return (
-    <ScrollView>
-      <Accordion
-        m="$5"
-        width="90%"
-        size="md"
-        variant="unfilled"
-        type="single"
-        isCollapsible={true}
-        isDisabled={false}
-        defaultValue={[Object.keys(bookings)[0]]}
-      >
-        {Object.entries(bookings).map(([date, BookingList], idx) => (
-        <BookingAccordionItem
-          value={idx + 1}
-          key={date}
-          date={new Date(date)} // Convert date string to Date object
-          BookingList={BookingList}
-        />))}
-      </Accordion>
-    </ScrollView>
+    <>
+      <SectionList
+      sections={sections}
+      keyExtractor={(item, index) => item.id.toString()}
+      renderItem={({ item }) => (
+        <Center>
+          <BookingCard item={item} key={item.id} />
+        </Center>
+      )}
+      renderSectionHeader={({ section: { title } }) => (
+        <Box bg="$secondary100" >
+        <Heading style={{ fontWeight: 'bold' }}>{title}</Heading>
+        <Divider  />
+        </Box>
+        
+      )}
+    />
+    </>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#fff",
-  },
-  text: {
-    fontSize: 24,
-    fontWeight: "bold",
-  },
-});
