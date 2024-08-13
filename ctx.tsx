@@ -35,7 +35,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
 
   const signIn = async (username: string, password: string) => {
     try {
-      const response = await axios.post('http://192.168.1.106:8000/api/token', {
+      const response = await axios.post('http://192.168.1.40:8000/api/token', {
         username,
         password,
       });

@@ -4,7 +4,7 @@ import { Text, View } from 'react-native';
 import { Button } from 'react-native-paper';
 import { useSession } from '@/ctx';
 
-export default function Index() {
+export default function Settings() {
   const { signOut, getSessionId } = useSession();
   const sessionId = getSessionId(); // Get the session ID
 
