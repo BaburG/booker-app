@@ -10,10 +10,7 @@ import {
   Heading,
   InputSlot,
   InputIcon,
-  FormControlError,
-  FormControlErrorIcon,
-  FormControlErrorText,
-  AlertCircleIcon,
+  Box,
 } from "@gluestack-ui/themed";
 import React, { useState } from "react";
 import { EyeIcon, EyeOffIcon } from "lucide-react-native";
@@ -26,26 +23,27 @@ export default function SignIn() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSignIn = async () => {
     try {
       setError(null); // Reset error state before attempting sign in
-      await signIn(username, password);
+      const response = await signIn(username, password);
       console.log("Sign-in successful, navigating to home.");
-      router.replace("/"); // This should trigger the navigation
-    } catch (err) {
-      console.error("Sign-in failed:", err);
-      setError(
-        "Failed to sign in. Please check your network connection and try again."
-      );
-    }
+      router.replace("/"); // Navigate to the home page
+      } catch (error) {
+        console.error("Sign-in failed:", error);
+        setError(
+          "Failed to sign in. Please check your network connection and try again."
+        );
+      }
   };
-  const [showPassword, setShowPassword] = useState(false);
+
   const handleState = () => {
-    setShowPassword((showState) => {
-      return !showState;
-    });
+    setShowPassword((showState) => !showState);
   };
+
+  const isFormValid = username.trim() !== "" && password.trim() !== "";
 
   return (
     <SafeAreaView
@@ -69,7 +67,7 @@ export default function SignIn() {
             <Text color="$text500" lineHeight="$xs">
               Email
             </Text>
-            <Input isInvalid={error ? true : false}>
+            <Input isInvalid={!!error}>
               <InputField
                 type="text"
                 autoCapitalize="none"
@@ -82,7 +80,7 @@ export default function SignIn() {
             <Text color="$text500" lineHeight="$xs">
               Password
             </Text>
-            <Input textAlign="center" isInvalid={error ? true : false}>
+            <Input textAlign="center" isInvalid={!!error}>
               <InputField
                 type={showPassword ? "text" : "password"}
                 value={password}
@@ -97,15 +95,11 @@ export default function SignIn() {
             </Input>
           </VStack>
           {error && (
-            <FormControlError>
-              <FormControlErrorIcon as={AlertCircleIcon} />
-              <FormControlErrorText>
-                {" "}
-                Invalid username or password
-              </FormControlErrorText>
-            </FormControlError>
+            <Box mt="$2">
+              <Text style={{ color: 'red', fontSize: 14 }}>{error}</Text>
+            </Box>
           )}
-          <Button ml="auto" onPress={handleSignIn}>
+          <Button ml="auto" onPress={handleSignIn} disabled={!isFormValid}>
             <ButtonText color="$white">Save</ButtonText>
           </Button>
         </VStack>

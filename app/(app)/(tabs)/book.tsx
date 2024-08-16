@@ -4,6 +4,8 @@ import { Card } from "@gluestack-ui/themed";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import axios from "axios";
 import { useSession } from "@/ctx"; // Assuming useSession is correctly defined in your context file
+import { router } from "expo-router";
+import { API_BASE_URL } from '@/config';
 
 const CreateBookingForm = () => {
   const [name, setName] = useState("");
@@ -33,25 +35,52 @@ const CreateBookingForm = () => {
   };
 
   const handleSubmit = async () => {
+    // Check if all required fields are filled
+    let isValid = true;
+    let newErrorFields = { date: false, time: false, duration: false };
+  
+    if (!name.trim()) {
+      isValid = false;
+      Alert.alert("Error", "Name is required.");
+    } else if (!duration.trim()) {
+      isValid = false;
+      newErrorFields.duration = true;
+      Alert.alert("Error", "Duration is required.");
+    } else if (!date) {
+      isValid = false;
+      newErrorFields.date = true;
+      Alert.alert("Error", "Date is required.");
+    } else if (!time) {
+      isValid = false;
+      newErrorFields.time = true;
+      Alert.alert("Error", "Time is required.");
+    }
+  
+    setErrorFields(newErrorFields);
+  
+    if (!isValid) {
+      return; // Prevent form submission if any field is invalid
+    }
+  
     const formattedDate = date.toISOString().split("T")[0]; // Format date as 'YYYY-MM-DD'
     const formattedTime = time.toTimeString().split(" ")[0]; // Format time as 'HH:MM:SS'
-
+  
     let start = new Date(formattedDate + "T" + formattedTime + "Z");
     let end = new Date(start);
-
+  
     if (duration) {
       end.setMinutes(start.getMinutes() + parseInt(duration));
     }
-
+  
     const bookingData = {
       name,
       description,
       start,
       end,
     };
-
+  
     axios
-      .post("http://192.168.1.40:8000/api/create_booking", bookingData, {
+      .post(`${API_BASE_URL}/api/create_booking`, bookingData, {
         headers: {
           Authorization: `token ${token}`, // Ensure `token` is defined and accessible here
           "Content-Type": "application/json",
@@ -67,12 +96,13 @@ const CreateBookingForm = () => {
           setTime(new Date());
           setDuration("");
           setErrorFields({ date: false, time: false, duration: false });
+          router.push("/(tabs)");
         }
       })
       .catch(function (error) {
         if (error.response && error.response.data) {
           const responseData = error.response.data;
-
+  
           if (responseData.__all__) {
             Alert.alert("Error", responseData.__all__[0]);
             setErrorFields({ date: true, time: true, duration: true });

@@ -1,6 +1,7 @@
 import { useContext, createContext, type PropsWithChildren } from 'react';
 import { useStorageState } from './useStorageState';
 import axios from 'axios';
+import { API_BASE_URL } from '@/config';
 
 const AuthContext = createContext<{
   signIn: (username: string, password: string) => Promise<any>;
@@ -35,7 +36,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
 
   const signIn = async (username: string, password: string) => {
     try {
-      const response = await axios.post('http://192.168.1.40:8000/api/token', {
+      const response = await axios.post(`${API_BASE_URL}/api/token`, {
         username,
         password,
       });

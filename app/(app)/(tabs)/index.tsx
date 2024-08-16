@@ -1,81 +1,115 @@
-import React, { useEffect, useState } from "react";
-import { ScrollView, Accordion, SectionList, View, Text, Box, Center, Heading, Divider } from "@gluestack-ui/themed";
-import BookingAccordionItem from "@/components/BookingAccordionItem";
+import React, { useState, useCallback } from "react";
+import { SectionList, Center, Box, Heading, Divider } from "@gluestack-ui/themed";
 import Booking from "@/types";
 import { useSession } from "@/ctx";
 import BookingCard from "@/components/BookingCard";
+import { useFocusEffect } from "@react-navigation/native";
+import { API_BASE_URL } from '@/config';
 
-// Function to format the date as "Month Day, Year"
 const formatDate = (date) => {
   const options = { year: "numeric", month: "long", day: "numeric" };
   return date.toLocaleDateString(undefined, options);
 };
 
-// Get today's date
-const today = new Date();
-
-// Get tomorrow's date
-const tomorrow = new Date(today);
-tomorrow.setDate(tomorrow.getDate() + 1);
-
-const afterTomorrow = new Date(tomorrow);
-afterTomorrow.setDate(afterTomorrow.getDate() + 1);
+const getWeekStartDate = (date) => {
+  const startOfWeek = new Date(date);
+  startOfWeek.setDate(date.getDate() - date.getDay());
+  return startOfWeek;
+};
 
 export default function Index() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [sections, setSections] = useState([]);
+  const [currentWeekStart, setCurrentWeekStart] = useState(getWeekStartDate(new Date()));
 
   const { getSessionId } = useSession();
   const token = getSessionId();
 
-  const todayFormattedDate = today.toISOString().split("T")[0];
+  const fetchBookingsForWeek = useCallback(
+    (weekStart) => {
+      const weekFormattedDate = weekStart.toISOString().split("T")[0];
 
-  useEffect(() => {
-    fetch(
-      `http://192.168.1.40:8000/api/get_week_bookings?date=${todayFormattedDate}`,
-      {
+      fetch(`${API_BASE_URL}/api/get_week_bookings?date=${weekFormattedDate}`, {
         method: "GET",
         headers: {
           Authorization: `token ${token}`,
         },
-      }
-    )
-      .then((response) => response.json())
-      .then((data) => {
-        setBookings(data);
-        
-        // Transform the data into the required format for SectionList
-        const transformedSections = Object.keys(data).map(date => ({
-          title: date,
-          data: data[date],
-        }));
-
-        setSections(transformedSections);
       })
-      .catch((error) => console.error("Error fetching bookings:", error));
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json(); // This returns a promise
+      })
+        .then((data) => {
+          const transformedSections = Object.keys(data).map(date => ({
+            title: date,
+            data: data[date],
+            key: `${date}-${weekFormattedDate}` 
+          }));
 
+          setSections((prevSections) => {
+            const updatedSections = [...prevSections];
 
-      
-  }, []);
+            transformedSections.forEach((newSection) => {
+              const existingSectionIndex = updatedSections.findIndex(
+                (section) => section.title === newSection.title
+              );
+
+              if (existingSectionIndex > -1) {
+                // Merge the new data with the existing section data
+                updatedSections[existingSectionIndex].data = [
+                  ...updatedSections[existingSectionIndex].data,
+                  ...newSection.data,
+                ];
+              } else {
+                // Add new section
+                updatedSections.push(newSection);
+              }
+            });
+
+            return updatedSections;
+          });
+        })
+        .catch((error) => console.error("Error fetching bookings:", error));
+    },
+    [token]
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchBookingsForWeek(currentWeekStart);
+    }, [fetchBookingsForWeek, currentWeekStart])
+  );
+
+  const loadNextWeek = useCallback(() => {
+    setCurrentWeekStart((prevWeekStart) => {
+      const nextWeekStart = new Date(prevWeekStart);
+      nextWeekStart.setDate(prevWeekStart.getDate() + 7);
+      fetchBookingsForWeek(nextWeekStart); // Fetch the bookings for the new week
+      return nextWeekStart;
+    });
+  }, [fetchBookingsForWeek]);
 
   return (
     <>
       <SectionList
-      sections={sections}
-      keyExtractor={(item, index) => item.id.toString()}
-      renderItem={({ item }) => (
-        <Center>
-          <BookingCard item={item} key={item.id} />
-        </Center>
-      )}
-      renderSectionHeader={({ section: { title } }) => (
-        <Box bg="$secondary100" >
-        <Heading style={{ fontWeight: 'bold' }}>{title}</Heading>
-        <Divider  />
-        </Box>
-        
-      )}
-    />
+        sections={sections}
+        keyExtractor={(item, index) => `${item.id}-${index}`} // Ensuring item keys are unique
+        renderItem={({ item }) => (
+          <Center>
+            <BookingCard item={item} />
+          </Center>
+        )}
+        renderSectionHeader={({ section: { title, key } }) => (
+          <Box bg="$secondary100" key={key}>
+            <Heading style={{ fontWeight: 'bold' }}>{title}</Heading>
+            <Divider />
+          </Box>
+        )}
+        onEndReached={loadNextWeek}
+        onEndReachedThreshold={0.1} // Adjust this value based on when you want to trigger loading more data
+      />
     </>
   );
 }

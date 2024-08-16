@@ -6,6 +6,7 @@ import { Pressable, SafeAreaView, ScrollView } from "@gluestack-ui/themed";
 import BookingCard from "@/components/BookingCard";
 import { Link } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
+import { API_BASE_URL } from '@/config';
 
 // Function to format the date as "Month Day, Year"
 const formatDate = (date) => {
@@ -20,7 +21,7 @@ export default function Settings() {
   const token = getSessionId();
 
   const fetchBookings = () => {
-    fetch(`http://192.168.1.40:8000/api/my_bookings`, {
+    fetch(`${API_BASE_URL}/api/my_bookings`, {
       method: "GET",
       headers: {
         Authorization: `token ${token}`,

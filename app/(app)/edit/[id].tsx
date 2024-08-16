@@ -5,6 +5,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import axios from 'axios';
 import { router, useLocalSearchParams, useNavigation } from 'expo-router';
 import { useSession } from '@/ctx'; // Assuming useSession is correctly defined in your context file
+import { API_BASE_URL } from '@/config';
 
 export default function EditBookingScreen() {
   const { id } = useLocalSearchParams(); // Get the booking ID from the params
@@ -15,6 +16,7 @@ export default function EditBookingScreen() {
   const [duration, setDuration] = useState('');
   const [loading, setLoading] = useState(true);
   const [errorFields, setErrorFields] = useState({
+    name: false,
     date: false,
     time: false,
     duration: false,
@@ -25,12 +27,16 @@ export default function EditBookingScreen() {
   const navigation = useNavigation();
 
   useEffect(() => {
+    // Set the screen title and back button label
+    navigation.setOptions({
+      title: 'Edit Booking',
+      headerBackTitle: 'My Bookings',
+    });
+
     // Fetch booking details on component mount
     axios
-      .get(`http://192.168.1.40:8000/api/get_booking`, {
-        params:{
-          id: id
-        },
+      .get(`${API_BASE_URL}/api/get_booking`, {
+        params: { id: id },
         headers: {
           Authorization: `token ${token}`,
         },
@@ -64,7 +70,24 @@ export default function EditBookingScreen() {
     setErrorFields({ ...errorFields, time: false });
   };
 
+  const validateFields = () => {
+    const errors = {};
+    if (!name) errors.name = true;
+    if (!date) errors.date = true;
+    if (!time) errors.time = true;
+    if (!duration || duration < 15 || duration >= 3600) errors.duration = true;
+
+    setErrorFields(errors);
+
+    return Object.keys(errors).length === 0;
+  };
+
   const handleUpdate = async () => {
+    if (!validateFields()) {
+      Alert.alert('Error', 'Please fill all fields correctly.');
+      return;
+    }
+
     const formattedDate = date.toISOString().split('T')[0];
     const formattedTime = time.toTimeString().split(' ')[0];
 
@@ -83,9 +106,9 @@ export default function EditBookingScreen() {
     };
 
     axios
-      .put(`http://192.168.1.40:8000/api/update_booking`, updatedBookingData, {
+      .put(`${API_BASE_URL}/api/update_booking`, updatedBookingData, {
         params: {
-          id : id
+          id: id,
         },
         headers: {
           Authorization: `token ${token}`,
@@ -95,7 +118,7 @@ export default function EditBookingScreen() {
       .then((response) => {
         if (response.data.message === 'Booking updated successfully') {
           Alert.alert('Success', 'Booking updated successfully!', [
-            { text: 'OK', onPress: () => router.back() }
+            { text: 'OK', onPress: () => router.back() },
           ]);
         }
       })
@@ -106,9 +129,9 @@ export default function EditBookingScreen() {
 
   const handleDelete = () => {
     axios
-      .delete(`http://192.168.1.40:8000/api/delete_booking`, {
+      .delete(`${API_BASE_URL}/api/delete_booking`, {
         params: {
-          id : id
+          id: id,
         },
         headers: {
           Authorization: `token ${token}`,
@@ -116,7 +139,7 @@ export default function EditBookingScreen() {
       })
       .then(() => {
         Alert.alert('Success', 'Booking deleted successfully!', [
-          { text: 'OK', onPress: () => router.back() }
+          { text: 'OK', onPress: () => router.back() },
         ]);
       })
       .catch((error) => {
@@ -141,9 +164,12 @@ export default function EditBookingScreen() {
         <View style={{ marginBottom: 16 }}>
           <Text>Name:</Text>
           <TextInput
-            style={{ borderBottomWidth: 1, padding: 8, color: 'gray' }}
+            style={{ borderBottomWidth: 1, padding: 8, color: 'gray', ...(errorFields.name ? { borderColor: 'red', borderWidth: 2 } : {}) }}
             value={name}
-            onChangeText={setName}
+            onChangeText={(text) => {
+              setName(text);
+              setErrorFields({ ...errorFields, name: false });
+            }}
             placeholder="Enter name"
           />
         </View>
@@ -165,9 +191,7 @@ export default function EditBookingScreen() {
             mode="date"
             display="default"
             onChange={onDateChange}
-            style={
-              errorFields.date ? { borderColor: 'red', borderWidth: 2 } : {}
-            }
+            style={errorFields.date ? { borderColor: 'red', borderWidth: 2 } : {}}
           />
         </View>
         <View style={{ marginBottom: 16 }}>
@@ -177,9 +201,7 @@ export default function EditBookingScreen() {
             mode="time"
             display="default"
             onChange={onTimeChange}
-            style={
-              errorFields.time ? { borderColor: 'red', borderWidth: 2 } : {}
-            }
+            style={errorFields.time ? { borderColor: 'red', borderWidth: 2 } : {}}
           />
         </View>
         <View style={{ marginBottom: 16 }}>
